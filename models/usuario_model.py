@@ -1,16 +1,25 @@
-from models.endereco_model import EnderecoModel
+from sql_alchemy import banco
 
 
-class UsuarioModel:
+class UsuarioModel(banco.Model):
+    __tablename__ = 'usuarios'
 
-    def __init__(self, id, nome, email, senha, cpf, pis, endereco: EnderecoModel):
+    id = banco.Column(banco.BigInteger, primary_key=True)
+    nome = banco.Column(banco.String(80))
+    email = banco.Column(banco.String)
+    senha = banco.Column(banco.String)
+    cpf = banco.Column(banco.String)
+    pis = banco.Column(banco.String)
+    endereco_id = banco.Column(banco.BigInteger)
+
+    def __init__(self, id, nome, email, senha, cpf, pis, endereco_id):
         self.id = id
         self.nome = nome
         self.email = email
         self.senha = senha
         self.cpf = cpf
         self.pis = pis
-        self.endereco: EnderecoModel = endereco
+        self.endereco_id: endereco_id
 
     def json(self):
         return {
@@ -20,5 +29,47 @@ class UsuarioModel:
             'senha': self.senha,
             'cpf': self.cpf,
             'pis': self.pis,
-            'endereco': self.endereco,
+            'endereco_id': self.endereco_id,
         }
+
+    @classmethod
+    def find_usuario_by_id(cls, id):
+        usuario = cls.query.filter_by(id=id).first()
+        if usuario:
+            return usuario
+        return None
+
+    def save_usuario(self):
+        banco.session.add(self)
+        banco.session.commit()
+
+    def delete_usuario(self):
+        banco.session.delete(self)
+        banco.session.commit()
+
+    def update_usuario(self, nome, senha):
+        self.nome = nome
+        self.senha = senha
+        banco.session.add(self)
+        banco.session.commit()
+
+    @classmethod
+    def find_usuario_by_email(cls, email):
+        usuario = cls.query.filter_by(email=email).first()
+        if usuario:
+            return usuario
+        return None
+
+    @classmethod
+    def find_usuario_by_cpf(cls, cpf):
+        usuario = cls.query.filter_by(cpf=cpf).first()
+        if usuario:
+            return usuario
+        return None
+
+    @classmethod
+    def find_usuario_by_pis(cls, pis):
+        usuario = cls.query.filter_by(pis=pis).first()
+        if usuario:
+            return usuario
+        return None
