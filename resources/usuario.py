@@ -1,6 +1,7 @@
 import re
 from flask_restful import Resource, reqparse
 from models.usuario_model import UsuarioModel
+from models.endereco_model import EnderecoModel
 
 usuarios = [
     {
@@ -8,18 +9,12 @@ usuarios = [
         'nome': 'João Vitor',
         'email': 'jvgsilva180@gmail.com',
         'senha': '123456',
-    },
-    {
-        'id': 2,
-        'nome': 'Jaqueline',
-        'email': 'jaqueline@gmail.com',
-        'senha': '123456',
-    },
-    {
-        'id': 3,
-        'nome': 'Tião',
-        'email': 'tiao@gmail.com',
-        'senha': '123456',
+        'cpf': '45215965421',
+        'pis': '35246465131',
+        'endereco': {"pais": "Brasil"
+            , "estado": "Sao Paulo"
+            , "municipio": "Sertãozinho"
+            , "cep": 14161314, "rua": "Nilo Moi", "numero": 34}
     }
 ]
 
@@ -35,6 +30,9 @@ class Usuario(Resource):
     args.add_argument('nome')
     args.add_argument('email')
     args.add_argument('senha')
+    args.add_argument('cpf')
+    args.add_argument('pis')
+    args.add_argument('endereco', type=dict)
 
     def find_usuario(id):
         for usuario in usuarios:
@@ -53,6 +51,8 @@ class Usuario(Resource):
 
         dados = Usuario.args.parse_args()
         novo_usuario = UsuarioModel(id, **dados)
+        novo_endereco = EnderecoModel(**dados['endereco'])
+        novo_usuario.endereco = novo_endereco.json()
         novo_json = novo_usuario.json()
 
         usuarios.append(novo_json)
@@ -61,6 +61,8 @@ class Usuario(Resource):
     def put(self, id):
         dados = Usuario.args.parse_args()
         novo_usuario = UsuarioModel(id, **dados)
+        novo_endereco = EnderecoModel(**dados['endereco'])
+        novo_usuario.endereco = novo_endereco.json()
         novo_json = novo_usuario.json()
 
         usuario = Usuario.find_usuario(id)
