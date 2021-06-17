@@ -1,26 +1,22 @@
-import re
+import hmac
+
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt
 from flask_restful import Resource, reqparse
+
+from blacklist import BLACKLIST
 from models.usuario_model import UsuarioModel
 
-
-class Usuarios(Resource):
-
-    def get(self):
-        return {'usuarios': [usuario.json() for usuario in UsuarioModel.query.all()]}
+atributos = reqparse.RequestParser()
+atributos.add_argument('nome', type=str, required=True, help="Este campo não pode estar em branco")
+atributos.add_argument('email', type=str, required=True, help="Este campo não pode estar em branco")
+atributos.add_argument('senha', type=str, required=True, help="Este campo não pode estar em branco")
+atributos.add_argument('cpf', type=str, required=True, help="Este campo não pode estar em branco")
+atributos.add_argument('pis', type=str, required=True, help="Este campo não pode estar em branco")
+atributos.add_argument('endereco_id')
 
 
 class Usuario(Resource):
-    args = reqparse.RequestParser()
-    args.add_argument('nome', type=str, required=True, help="Este campo não pode estar em branco")
-    args.add_argument('email', type=str, required=True, help="Este campo não pode estar em branco")
-    args.add_argument('senha', type=str, required=True, help="Este campo não pode estar em branco")
-    args.add_argument('cpf', type=str, required=True, help="Este campo não pode estar em branco")
-    args.add_argument('pis', type=str, required=True, help="Este campo não pode estar em branco")
-    args.add_argument('endereco_id')
-
-    update_args = reqparse.RequestParser()
-    update_args.add_argument('nome', type=str, required=True, help="Este campo não pode estar em branco")
-    update_args.add_argument('senha', type=str, required=True, help="Este campo não pode estar em branco")
+    # usuarios/{id}
 
     def validate_user_id(id):
         return UsuarioModel.find_usuario_by_id(id)
@@ -34,6 +30,7 @@ class Usuario(Resource):
     def validate_user_pis(pis):
         return UsuarioModel.find_usuario_by_pis(pis)
 
+    @jwt_required()
     def get(self, id):
         usuario = UsuarioModel.find_usuario_by_id(id)
         if usuario:
@@ -41,42 +38,7 @@ class Usuario(Resource):
 
         return {'message': 'Usuario não encontrado'}, 404
 
-    def post(self, id):
-
-        dados = Usuario.args.parse_args()
-        if Usuario.validate_user_id(id):
-            return {"message": "Usuario '{}' já existe".format(id)}, 400
-
-        if Usuario.validate_user_email(dados['email']):
-            return {"message": "Email '{}' já cadastrado".format(dados['email'])}, 400
-
-        if Usuario.validate_user_cpf(dados['cpf']):
-            return {"message": "CPF '{}' já cadastrado".format(dados['cpf'])}, 400
-
-        if Usuario.validate_user_pis(dados['pis']):
-            return {"message": "PIS '{}' já cadastrado".format(dados['pis'])}, 400
-
-        usuario = UsuarioModel(id, **dados)
-        try:
-            usuario.save_usuario()
-        except:
-            return {'message': 'Houve um erro ao tentar cadastrar usuário'}, 500
-        return usuario.json()
-
-    def put(self, id):
-        dados = Usuario.update_args.parse_args()
-
-        usuario_encontrado = UsuarioModel.find_usuario_by_id(id)
-        if usuario_encontrado:
-            usuario_encontrado.update_usuario(**dados)
-            try:
-                usuario_encontrado.save_usuario()
-            except:
-                return {'message': 'Houve um erro ao tentar atualizar o usuário'}, 500
-            return usuario_encontrado.json(), 200
-
-        return {"message": "Usuario com email '{}' não encontrado".format(dados['email'])}, 200
-
+    @jwt_required()
     def delete(self, id):
         usuario = Usuario.validate_user_id(id)
         if usuario:
@@ -87,3 +49,47 @@ class Usuario(Resource):
             return {'message': 'Usuario deletado.'}, 200
 
         return {'message': 'Usuario não encontrado'}, 404
+
+
+class UsuarioCadastro(Resource):
+
+    # /cadastro
+    def post(self):
+        dados = atributos.parse_args()
+        if Usuario.validate_user_email(dados['email']):
+            return {"message": "Já existe cadastro para o email '{}'".format(dados['email'])}, 400
+        if Usuario.validate_user_pis(dados['pis']):
+            return {"message": "Já existe cadastro para o PIS '{}'".format(dados['pis'])}, 400
+        if Usuario.validate_user_cpf(dados['cpf']):
+            return {"message": "Já existe cadastro para o CPF '{}'".format(dados['cpf'])}, 400
+
+        user = UsuarioModel(**dados)
+        user.save_usuario()
+        return {'message': 'Usuário criado com sucesso'}, 201
+
+
+class UsuarioLogin(Resource):
+
+    @classmethod
+    def post(cls):
+        atributos_login = reqparse.RequestParser()
+        atributos_login.add_argument('email', type=str, required=True, help="Este campo não pode estar em branco")
+        atributos_login.add_argument('senha', type=str, required=True, help="Este campo não pode estar em branco")
+        dados = atributos_login.parse_args()
+
+        usuario = UsuarioModel.find_usuario_by_email(dados['email'])
+
+        if usuario and hmac.compare_digest(dados['senha'], usuario.senha):
+            token_de_acesso = create_access_token(identity=usuario.id)
+            return {'access_token': token_de_acesso}, 200
+
+        return {'message': 'Email ou senha incorretos'}, 401
+
+
+class UsuarioLogout(Resource):
+
+    @jwt_required()
+    def post(self):
+        jwt_id = get_jwt()['jti']
+        BLACKLIST.add(jwt_id)
+        return {'message': 'Até mais, e volte logo'}, 200

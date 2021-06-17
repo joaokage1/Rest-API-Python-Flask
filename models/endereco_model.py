@@ -4,7 +4,7 @@ from sql_alchemy import banco
 class EnderecoModel(banco.Model):
     __tablename__ = 'enderecos'
 
-    id = banco.Column(banco.BigInteger, primary_key=True)
+    id = banco.Column(banco.Integer, primary_key=True)
     pais = banco.Column(banco.String(80))
     estado = banco.Column(banco.String)
     municipio = banco.Column(banco.String)
@@ -13,8 +13,7 @@ class EnderecoModel(banco.Model):
     numero = banco.Column(banco.Integer)
     complemento = banco.Column(banco.String)
 
-    def __init__(self, id, pais, estado, municipio, cep, rua, numero, complemento):
-        self.id = id
+    def __init__(self, pais, estado, municipio, cep, rua, numero, complemento):
         self.pais = pais
         self.estado = estado
         self.municipio = municipio

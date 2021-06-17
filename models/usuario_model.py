@@ -4,7 +4,7 @@ from sql_alchemy import banco
 class UsuarioModel(banco.Model):
     __tablename__ = 'usuarios'
 
-    id = banco.Column(banco.BigInteger, primary_key=True)
+    id = banco.Column(banco.Integer, primary_key=True)
     nome = banco.Column(banco.String(80))
     email = banco.Column(banco.String)
     senha = banco.Column(banco.String)
@@ -12,8 +12,7 @@ class UsuarioModel(banco.Model):
     pis = banco.Column(banco.String)
     endereco_id = banco.Column(banco.BigInteger)
 
-    def __init__(self, id, nome, email, senha, cpf, pis, endereco_id):
-        self.id = id
+    def __init__(self, nome, email, senha, cpf, pis, endereco_id):
         self.nome = nome
         self.email = email
         self.senha = senha
@@ -26,18 +25,10 @@ class UsuarioModel(banco.Model):
             'id': self.id,
             'nome': self.nome,
             'email': self.email,
-            'senha': self.senha,
             'cpf': self.cpf,
             'pis': self.pis,
             'endereco_id': self.endereco_id,
         }
-
-    @classmethod
-    def find_usuario_by_id(cls, id):
-        usuario = cls.query.filter_by(id=id).first()
-        if usuario:
-            return usuario
-        return None
 
     def save_usuario(self):
         banco.session.add(self)
@@ -52,6 +43,13 @@ class UsuarioModel(banco.Model):
         self.senha = senha
         banco.session.add(self)
         banco.session.commit()
+
+    @classmethod
+    def find_usuario_by_id(cls, id):
+        usuario = cls.query.filter_by(id=id).first()
+        if usuario:
+            return usuario
+        return None
 
     @classmethod
     def find_usuario_by_email(cls, email):
