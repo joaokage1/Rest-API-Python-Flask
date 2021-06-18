@@ -5,6 +5,8 @@ from flask_restful import Resource, reqparse
 
 from blacklist import BLACKLIST
 from models.usuario_model import UsuarioModel
+from models.endereco_model import EnderecoModel
+from models.response import Response
 
 atributos = reqparse.RequestParser()
 atributos.add_argument('nome', type=str, required=True, help="Este campo não pode estar em branco")
@@ -12,7 +14,7 @@ atributos.add_argument('email', type=str, required=True, help="Este campo não p
 atributos.add_argument('senha', type=str, required=True, help="Este campo não pode estar em branco")
 atributos.add_argument('cpf', type=str, required=True, help="Este campo não pode estar em branco")
 atributos.add_argument('pis', type=str, required=True, help="Este campo não pode estar em branco")
-atributos.add_argument('endereco_id')
+atributos.add_argument('endereco_id', type=int, required=True, help="Este campo não pode estar em branco")
 
 
 class Usuario(Resource):
@@ -34,7 +36,13 @@ class Usuario(Resource):
     def get(self, id):
         usuario = UsuarioModel.find_usuario_by_id(id)
         if usuario:
-            return usuario.json()
+            endereco = EnderecoModel.find_endereco_by_id(usuario.endereco_id)
+            if endereco:
+                response = Response(usuario, endereco)
+                return response.json()
+            endereco = EnderecoModel(None, None, None, None, None, None, None)
+            response = Response(usuario, endereco)
+            return response.json()
 
         return {'message': 'Usuario não encontrado'}, 404
 
@@ -63,8 +71,12 @@ class UsuarioCadastro(Resource):
         if Usuario.validate_user_cpf(dados['cpf']):
             return {"message": "Já existe cadastro para o CPF '{}'".format(dados['cpf'])}, 400
 
-        user = UsuarioModel(**dados)
-        user.save_usuario()
+        try:
+            user = UsuarioModel(**dados)
+            user.save_usuario()
+        except:
+            return {'message': 'Houve um erro ao tentar cadastrar o usuário'}, 500
+
         return {'message': 'Usuário criado com sucesso'}, 201
 
 

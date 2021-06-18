@@ -33,3 +33,25 @@ class EnderecoModel(banco.Model):
             'numero': self.numero,
             'complemento': self.complemento,
         }
+
+    def save_endereco(self):
+        banco.session.add(self)
+        banco.session.commit()
+
+    def update_usuario(self, pais, estado, municipio, cep, rua, numero, complemento):
+        self.pais = pais
+        self.estado = estado
+        self.municipio = municipio
+        self.cep = cep
+        self.rua = rua
+        self.numero = numero
+        self.complemento = complemento
+        banco.session.add(self)
+        banco.session.commit()
+
+    @classmethod
+    def find_endereco_by_id(cls, id):
+        endereco = cls.query.filter_by(id=id).first()
+        if endereco:
+            return endereco
+        return None

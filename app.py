@@ -5,6 +5,7 @@ from flask_restful import Api
 
 from blacklist import BLACKLIST
 from resources.usuario import Usuario, UsuarioCadastro, UsuarioLogin, UsuarioLogout
+from resources.endereco import Endereco, EnderecoCadastro
 from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
@@ -37,6 +38,8 @@ api.add_resource(Usuario, '/usuarios/<int:id>')
 api.add_resource(UsuarioCadastro, '/cadastro')
 api.add_resource(UsuarioLogin, '/login')
 api.add_resource(UsuarioLogout, '/logout')
+api.add_resource(Endereco, '/endereco/<int:id>')
+api.add_resource(EnderecoCadastro, '/endereco')
 
 if __name__ == '__main__':
     from sql_alchemy import banco

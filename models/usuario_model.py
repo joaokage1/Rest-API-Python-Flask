@@ -10,7 +10,7 @@ class UsuarioModel(banco.Model):
     senha = banco.Column(banco.String)
     cpf = banco.Column(banco.String)
     pis = banco.Column(banco.String)
-    endereco_id = banco.Column(banco.BigInteger)
+    endereco_id = banco.Column(banco.Integer)
 
     def __init__(self, nome, email, senha, cpf, pis, endereco_id):
         self.nome = nome
@@ -18,7 +18,7 @@ class UsuarioModel(banco.Model):
         self.senha = senha
         self.cpf = cpf
         self.pis = pis
-        self.endereco_id: endereco_id
+        self.endereco_id = endereco_id
 
     def json(self):
         return {
