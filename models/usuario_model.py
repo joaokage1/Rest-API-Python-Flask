@@ -10,7 +10,8 @@ class UsuarioModel(banco.Model):
     senha = banco.Column(banco.String)
     cpf = banco.Column(banco.String)
     pis = banco.Column(banco.String)
-    endereco_id = banco.Column(banco.Integer)
+    endereco_id = banco.Column(banco.Integer, banco.ForeignKey('enderecos.id'))
+    endereco = banco.relationship('EnderecoModel')
 
     def __init__(self, nome, email, senha, cpf, pis, endereco_id):
         self.nome = nome
@@ -27,7 +28,7 @@ class UsuarioModel(banco.Model):
             'email': self.email,
             'cpf': self.cpf,
             'pis': self.pis,
-            'endereco_id': self.endereco_id,
+            'endereco': self.endereco.json() if self.endereco else None,
         }
 
     def save_usuario(self):
@@ -35,6 +36,9 @@ class UsuarioModel(banco.Model):
         banco.session.commit()
 
     def delete_usuario(self):
+        if self.endereco:
+            self.endereco.delete_endereco()
+
         banco.session.delete(self)
         banco.session.commit()
 

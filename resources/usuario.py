@@ -5,8 +5,6 @@ from flask_restful import Resource, reqparse
 
 from blacklist import BLACKLIST
 from models.usuario_model import UsuarioModel
-from models.endereco_model import EnderecoModel
-from models.response import Response
 
 atributos = reqparse.RequestParser()
 atributos.add_argument('nome', type=str, required=True, help="Este campo não pode estar em branco")
@@ -36,13 +34,7 @@ class Usuario(Resource):
     def get(self, id):
         usuario = UsuarioModel.find_usuario_by_id(id)
         if usuario:
-            endereco = EnderecoModel.find_endereco_by_id(usuario.endereco_id)
-            if endereco:
-                response = Response(usuario, endereco)
-                return response.json()
-            endereco = EnderecoModel(None, None, None, None, None, None, None)
-            response = Response(usuario, endereco)
-            return response.json()
+            return usuario.json()
 
         return {'message': 'Usuario não encontrado'}, 404
 

@@ -49,6 +49,10 @@ class EnderecoModel(banco.Model):
         banco.session.add(self)
         banco.session.commit()
 
+    def delete_endereco(self):
+        banco.session.delete(self)
+        banco.session.commit()
+
     @classmethod
     def find_endereco_by_id(cls, id):
         endereco = cls.query.filter_by(id=id).first()

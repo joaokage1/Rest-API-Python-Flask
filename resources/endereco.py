@@ -45,5 +45,9 @@ class EnderecoCadastro(Resource):
     def post(self):
         dados = atributos.parse_args()
         endereco = EnderecoModel(**dados)
-        endereco.save_endereco()
-        return {'message': 'Endereço criado com sucesso'}, 201
+        try:
+            endereco.save_endereco()
+        except:
+            return {'message': 'Houve um erro ao tentar cadastrar o usuário'}, 500
+
+        return {'enderecoId': endereco.id}, 201
