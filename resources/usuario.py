@@ -1,6 +1,6 @@
 import hmac
 
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt, get_jwt_identity
 from flask_restful import Resource, reqparse
 
 from blacklist import BLACKLIST
@@ -32,24 +32,29 @@ class Usuario(Resource):
 
     @jwt_required()
     def get(self, id):
+        current_user = get_jwt_identity()
         usuario = UsuarioModel.find_usuario_by_id(id)
         if usuario:
-            return usuario.json()
+            if usuario.id == current_user:
+                return {'usuario': usuario.json()}
+            return {'message': 'Não possui permissão'}, 401
 
         return {'message': 'Usuario não encontrado'}, 404
 
     @jwt_required()
     def delete(self, id):
         usuario = Usuario.validate_user_id(id)
+        current_user = get_jwt_identity()
         if usuario:
-            try:
-                usuario.delete_usuario()
-                jwt_id = get_jwt()['jti']
-                BLACKLIST.add(jwt_id)
-            except:
-                return {'message': 'Houve um erro ao tentar deletar o usuário'}, 500
-            return {'message': 'Usuario deletado.'}, 200
-
+            if usuario.id == current_user:
+                try:
+                    usuario.delete_usuario()
+                    jwt_id = get_jwt()['jti']
+                    BLACKLIST.add(jwt_id)
+                    return {'message': 'Usuario deletado.'}, 200
+                except Exception as e:
+                    return {'message': 'Houve um erro ao tentar deletar o usuário {}'.format(e)}, 500
+            return {'message': 'Não possui permissão'}, 401
         return {'message': 'Usuario não encontrado'}, 404
 
 
@@ -68,10 +73,10 @@ class UsuarioCadastro(Resource):
         try:
             user = UsuarioModel(**dados)
             user.save_usuario()
-        except:
-            return {'message': 'Houve um erro ao tentar cadastrar o usuário'}, 500
+        except Exception as e:
+            return {'message': 'Houve um erro ao tentar cadastrar o usuário {}'.format(e)}, 500
 
-        return {'message': 'Usuário criado com sucesso'}, 201
+        return {'message': 'Usuário criado com sucesso', 'id': user.id}, 201
 
 
 class UsuarioLogin(Resource):
@@ -87,7 +92,7 @@ class UsuarioLogin(Resource):
 
         if usuario and hmac.compare_digest(dados['senha'], usuario.senha):
             token_de_acesso = create_access_token(identity=usuario.id)
-            return {'access_token': token_de_acesso}, 200
+            return {'access_token': token_de_acesso, 'usuario_id': usuario.id}, 200
 
         return {'message': 'Email ou senha incorretos'}, 401
 
