@@ -7,6 +7,7 @@ from blacklist import BLACKLIST
 from resources.usuario import Usuario, UsuarioCadastro, UsuarioLogin, UsuarioLogout
 from resources.endereco import Endereco, EnderecoCadastro
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///banco.db'
@@ -14,6 +15,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'MyJWTSecretKeyForFlaskApplication'
 # app.config['JWT_EXPIRATION_DELTA'] = datetime.timedelta(days=1)
 app.config['JWT_BLACKLIST_ENABLED'] = True
+CORS(app)
 
 api = Api(app)
 jwt = JWTManager(app)
