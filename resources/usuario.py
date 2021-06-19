@@ -44,6 +44,8 @@ class Usuario(Resource):
         if usuario:
             try:
                 usuario.delete_usuario()
+                jwt_id = get_jwt()['jti']
+                BLACKLIST.add(jwt_id)
             except:
                 return {'message': 'Houve um erro ao tentar deletar o usuário'}, 500
             return {'message': 'Usuario deletado.'}, 200
