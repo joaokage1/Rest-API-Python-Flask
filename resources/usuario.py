@@ -92,7 +92,7 @@ class UsuarioLogin(Resource):
 
         if usuario and hmac.compare_digest(dados['senha'], usuario.senha):
             token_de_acesso = create_access_token(identity=usuario.id)
-            return {'access_token': token_de_acesso, 'usuario_id': usuario.id}, 200
+            return {'access_token': token_de_acesso, 'usuario_id': usuario.id, 'nome': usuario.nome}, 200
 
         return {'message': 'Email ou senha incorretos'}, 401
 
